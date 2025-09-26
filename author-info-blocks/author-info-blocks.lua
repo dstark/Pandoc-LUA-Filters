@@ -50,6 +50,17 @@ end
 local function author_inline_generator (get_mark)
   return function (author)
     local author_marks = List:new{}
+    local affil_lines = List:new(affiliations):map(
+      function (affil, i)
+        local num_inlines = List:new{
+          pandoc.Superscript{pandoc.Str(tostring(i))},
+          pandoc.Space()
+        }
+        return affil.name
+        -- return num_inlines .. affil.name
+      end
+    )
+
     if author.equal_contributor then
       author_marks[#author_marks + 1] = get_mark 'equal_contributor'
     end
@@ -65,8 +76,9 @@ local function author_inline_generator (get_mark)
     if is_corresponding_author(author) then
       author_marks[#author_marks + 1] = get_mark 'corresponding_author'
     end
+    -- local res = affil_lines
     local res = List.clone(author.name)
-    -- res[#res + 1] = pandoc.Superscript(intercalate(author_marks, {pandoc.Str ','}))
+    res[#res + 1] = pandoc.Superscript(intercalate(author_marks, {pandoc.Str ','}))
     return res
   end
 end
@@ -97,12 +109,12 @@ local function create_affiliations_blocks(affiliations)
         pandoc.Superscript{pandoc.Str(tostring(i))},
         pandoc.Space()
       }
-      return affil.name
-      -- return num_inlines .. affil.name
+      -- return affil.name
+      return num_inlines .. affil.name
     end
-    )
+  )
   -- return affil_lines
-  return {pandoc.Para(intercalate(affil_lines, {pandoc.Str ' and '}))}
+  return {pandoc.Para(intercalate(affil_lines, {pandoc.LineBreak()}))}
 end
 
 --- Generate a block element containing the correspondence information
@@ -170,7 +182,7 @@ return {
         and pandoc.MetaList(doc.meta.author):map(author_inline_generator(mark))
         or pandoc.MetaInlines(create_authors_inlines(doc.meta.author, mark))
       -- Institute info is now baked into the affiliations block.
-      meta.institute = nil
+      -- meta.institute = nil
 
       return pandoc.Pandoc(body, meta)
     end
