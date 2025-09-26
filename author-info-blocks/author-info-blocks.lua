@@ -60,13 +60,13 @@ local function author_inline_generator (get_mark)
       else
         idx_str = stringify(idx)
       end
-      -- author_marks[#author_marks + 1] = {pandoc.Str(idx_str)}
+      author_marks[#author_marks + 1] = {pandoc.Str(idx_str)}
     end
     if is_corresponding_author(author) then
       author_marks[#author_marks + 1] = get_mark 'corresponding_author'
     end
     local res = List.clone(author.name)
-    res[#res + 1] = pandoc.Superscript(intercalate(author_marks, {pandoc.Str ','}))
+    -- res[#res + 1] = pandoc.Superscript(intercalate(author_marks, {pandoc.Str ','}))
     return res
   end
 end
@@ -100,8 +100,9 @@ local function create_affiliations_blocks(affiliations)
       return affil.name
       -- return num_inlines .. affil.name
     end
-                                                )
-  return {pandoc.Para(intercalate(affil_lines, {pandoc.LineBreak()}))}
+    )
+  -- return affil_lines
+  return {pandoc.Para(intercalate(affil_lines, {pandoc.Str ' and '}))}
 end
 
 --- Generate a block element containing the correspondence information
@@ -165,16 +166,11 @@ return {
       -- Overwrite authors with formatted values. We use a single, formatted
       -- string for most formats. LaTeX output, however, looks nicer if we
       -- provide a authors as a list.
-      -- meta.author = FORMAT:match 'latex'
-      --   and pandoc.MetaList(doc.meta.author):map(author_inline_generator(mark))
-      --   or pandoc.MetaInlines(create_authors_inlines(doc.meta.author, mark))
-      if FORMAT:match('latex') then
-        meta.author = pandoc.MetaList(doc.meta.author):map(author_inline_generator(mark))
-      else
-        meta.author = pandoc.MetaInlines(create_authors_inlines(doc.meta.author, mark))
-      end
+      meta.author = FORMAT:match 'latex'
+        and pandoc.MetaList(doc.meta.author):map(author_inline_generator(mark))
+        or pandoc.MetaInlines(create_authors_inlines(doc.meta.author, mark))
       -- Institute info is now baked into the affiliations block.
-      -- meta.institute = nil
+      meta.institute = nil
 
       return pandoc.Pandoc(body, meta)
     end
