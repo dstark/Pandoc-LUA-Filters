@@ -31,7 +31,7 @@ local function run_spellcheck(lang)
     keys[#keys + 1] = k
   end
   local inp = table.concat(keys, '\n')
-  local outp = pandoc.pipe('aspell', {'list','-l',lang}, inp)
+  local outp = pandoc.pipe('aspell', {'list','-l',lang,'--encoding=utf-8'}, inp)
   for w in string.gmatch(outp, "([%S]+)\n") do
     io.write(w)
     if lang ~= deflang then
